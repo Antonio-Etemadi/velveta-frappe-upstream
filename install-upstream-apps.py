@@ -29,4 +29,11 @@ for app in apps:
             subprocess.run(["git", "-C", str(app_path), "checkout", "-f", commit], check=True)
     print(f"Installing {app_name} in editable mode...")
     subprocess.run(["./env/bin/pip", "install", "--no-cache-dir", "-e", str(app_path)], check=True)
-print("All upstream apps installed successfully!")
+
+    if (app_path / "package.json").exists():
+        print(f"Installing node dependencies for {app_name}...")
+        subprocess.run(["yarn", "--cwd", str(app_path), "install"], check=False)
+
+print("Running bench setup requirements for node...")
+subprocess.run(["bench", "setup", "requirements", "--node"], check=False)
+print("All upstream apps and frontend dependencies installed successfully!")
