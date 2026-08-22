@@ -1,0 +1,53 @@
+name: Build & Push Upstream Frappe Base Image
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+
+concurrency:
+  group: build-velveta-frappe-upstream-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on:
+      - self-hosted
+      - dev
+      - backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Log in to GHCR
+        run: |
+          set -euo pipefail
+          if [ -f /opt/velveta/infra-prod/.secrets/github_runner_pat ]; then
+            cat /opt/velveta/infra-prod/.secrets/github_runner_pat | docker login ghcr.io -u Antonio-Etemadi --password-stdin
+          else
+            echo "${{ github.token }}" | docker login ghcr.io -u Antonio-Etemadi --password-stdin
+          fi
+
+      - name: Build and push upstream Frappe image
+        run: |
+          set -euo pipefail
+          export SECRET_FLAG=""
+          if [ -f /opt/velveta/infra-prod/.secrets/github_runner_pat ]; then
+            SECRET_FLAG="--secret id=github_pat,src=/opt/velveta/infra-prod/.secrets/github_runner_pat"
+          fi
+
+          docker buildx build \
+            --network=host \
+            --cache-from=type=registry,ref=ghcr.io/antonio-etemadi/velveta-frappe-upstream:buildcache \
+            --cache-to=type=registry,ref=ghcr.io/antonio-etemadi/velveta-frappe-upstream:buildcache,mode=max \
+            --push \
+            --tag ghcr.io/antonio-etemadi/velveta-frappe-upstream:${{ github.sha }} \
+            --tag ghcr.io/antonio-etemadi/velveta-frappe-upstream:latest \
+            --file Containerfile \
+            ${SECRET_FLAG} \
+            .
