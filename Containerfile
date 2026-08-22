@@ -162,6 +162,7 @@ RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
     playwright \
     svglib && \
   echo '{"socketio_port": 9000, "webserver_port": 8000}' > sites/common_site_config.json && \
+  (cd /home/frappe/frappe-bench/apps/frappe && yarn add onscan.js --ignore-engines || true) && \
   export NODE_OPTIONS="--max-old-space-size=4096" && \
   bench build --production && \
   find apps -mindepth 1 -maxdepth 1 -type d | sort | while read -r app_dir; do \
