@@ -128,8 +128,8 @@ RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
     --no-backups \
     --skip-redis-config-generation \
     --skip-assets \
-    --verbose \
     /home/frappe/frappe-bench && \
+  yarn cache clean && \
   cd /home/frappe/frappe-bench && \
   if [ -n "${FRAPPE_COMMIT}" ]; then \
     (git -C apps/frappe checkout "${FRAPPE_COMMIT}" || (git -C apps/frappe fetch --depth=50 origin "${FRAPPE_BRANCH}" && git -C apps/frappe checkout "${FRAPPE_COMMIT}")) || true; \
