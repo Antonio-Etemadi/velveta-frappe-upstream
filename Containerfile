@@ -118,6 +118,7 @@ ARG FRAPPE_PATH=https://github.com/frappe/frappe
 ARG FRAPPE_COMMIT=9a8daf343db69a0127f470bad8be0af192cd80c8
 
 RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
+  git config --global --add safe.directory "*" && \
   yarn config set ignore-engines true && \
   export APP_INSTALL_ARGS="" && \
   export GIT_TOKEN_CONFIGURED="" && \
@@ -135,7 +136,7 @@ RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
     /home/frappe/frappe-bench && \
   cd /home/frappe/frappe-bench && \
   if [ -n "${FRAPPE_COMMIT}" ]; then \
-    git -C apps/frappe checkout "${FRAPPE_COMMIT}"; \
+    (git -C apps/frappe checkout "${FRAPPE_COMMIT}" || (git -C apps/frappe fetch --depth=50 origin "${FRAPPE_BRANCH}" && git -C apps/frappe checkout "${FRAPPE_COMMIT}")) || true; \
   fi && \
   /home/frappe/frappe-bench/env/bin/pip install --no-cache-dir \
     redis \
