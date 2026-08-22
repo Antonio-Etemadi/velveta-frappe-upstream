@@ -110,6 +110,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY upstream-apps.json /opt/frappe/upstream-apps.json
+COPY install-upstream-apps.py /tmp/install-upstream-apps.py
 
 USER frappe
 
@@ -120,12 +121,7 @@ ARG FRAPPE_COMMIT=9a8daf343db69a0127f470bad8be0af192cd80c8
 RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
   git config --global --add safe.directory "*" && \
   yarn config set ignore-engines true && \
-  export APP_INSTALL_ARGS="" && \
-  export GIT_TOKEN_CONFIGURED="" && \
-  if [ -f /opt/frappe/upstream-apps.json ]; then \
-    export APP_INSTALL_ARGS="--apps_path=/opt/frappe/upstream-apps.json"; \
-  fi && \
-  bench init ${APP_INSTALL_ARGS} \
+  bench init \
     --frappe-branch=${FRAPPE_BRANCH} \
     --frappe-path=${FRAPPE_PATH} \
     --no-procfile \
@@ -138,6 +134,7 @@ RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
   if [ -n "${FRAPPE_COMMIT}" ]; then \
     (git -C apps/frappe checkout "${FRAPPE_COMMIT}" || (git -C apps/frappe fetch --depth=50 origin "${FRAPPE_BRANCH}" && git -C apps/frappe checkout "${FRAPPE_COMMIT}")) || true; \
   fi && \
+  python3 /tmp/install-upstream-apps.py && \
   /home/frappe/frappe-bench/env/bin/pip install --no-cache-dir \
     redis \
     pyOpenSSL \
@@ -164,7 +161,8 @@ RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
     coverage \
     playwright \
     svglib && \
-  echo "{}" > /home/frappe/frappe-bench/sites/common_site_config.json && \
+  echo '{"socketio_port": 9000, "webserver_port": 8000}' > sites/common_site_config.json && \
+  bench build --production && \
   find apps -mindepth 1 -maxdepth 1 -type d | sort | while read -r app_dir; do \
     if [ -d "$app_dir/.git" ]; then \
       app_name="$(basename "$app_dir")"; \
