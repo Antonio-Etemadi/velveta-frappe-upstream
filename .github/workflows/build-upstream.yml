@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - VERSION
   workflow_dispatch:
 
 concurrency:
@@ -22,6 +24,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Validate immutable upstream release
+        id: release
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          python3 ./validate-upstream-pins.py
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         run: |
@@ -46,6 +57,7 @@ jobs:
             --cache-to=type=registry,ref=ghcr.io/antonio-etemadi/velveta-frappe-upstream:buildcache,mode=max \
             --push \
             --tag ghcr.io/antonio-etemadi/velveta-frappe-upstream:${{ github.sha }} \
+            --tag ghcr.io/antonio-etemadi/velveta-frappe-upstream:v${{ steps.release.outputs.version }} \
             --tag ghcr.io/antonio-etemadi/velveta-frappe-upstream:latest \
             --file Containerfile \
             ${SECRET_FLAG} \

@@ -1,5 +1,5 @@
 import json
-import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -14,6 +14,8 @@ for app in apps:
     url = app["url"]
     branch = app.get("branch", "version-16")
     commit = (app.get("commit") or "").strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError(f"{url} must have an exact 40-character commit pin")
     app_name = Path(url.rstrip("/").removesuffix(".git")).name
     app_path = Path(f"apps/{app_name}")
     if app_path.exists():
@@ -21,12 +23,16 @@ for app in apps:
 
     print(f"Cloning upstream app {app_name} ({branch})...")
     subprocess.run(["git", "clone", "--depth=50", "-b", branch, url, str(app_path)], check=True)
-    if commit:
-        print(f"Checking out pinned commit {commit} for {app_name}...")
-        head = subprocess.check_output(["git", "-C", str(app_path), "rev-parse", "HEAD"], text=True).strip()
-        if head != commit:
-            subprocess.run(["git", "-C", str(app_path), "fetch", "--depth=50", "origin", commit], check=False)
-            subprocess.run(["git", "-C", str(app_path), "checkout", "-f", commit], check=True)
+    print(f"Checking out pinned commit {commit} for {app_name}...")
+    head = subprocess.check_output(["git", "-C", str(app_path), "rev-parse", "HEAD"], text=True).strip()
+    if head != commit:
+        subprocess.run(["git", "-C", str(app_path), "fetch", "--depth=1", "origin", commit], check=True)
+    subprocess.run(["git", "-C", str(app_path), "checkout", "--detach", "--force", commit], check=True)
+    checked_out = subprocess.check_output(
+        ["git", "-C", str(app_path), "rev-parse", "HEAD"], text=True
+    ).strip()
+    if checked_out != commit:
+        raise RuntimeError(f"{app_name} resolved to {checked_out}, expected {commit}")
     print(f"Installing {app_name} in editable mode...")
     subprocess.run(["./env/bin/pip", "install", "--no-cache-dir", "-e", str(app_path)], check=True)
 
