@@ -17,7 +17,7 @@ This repository builds and maintains the base upstream Frappe framework, ERPNext
 - **Upstream Apps**:
   - `frappe/frappe` (`version-16`)
   - `frappe/erpnext` (`version-16`)
-  - `frappe/payments` (`develop`)
+  - `frappe/payments` (`version-16`)
   - `frappe/blog` (`version-16`)
   - `frappe/drive` (`develop`)
   - `frappe/writer` (`develop`)

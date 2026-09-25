@@ -6,7 +6,7 @@
   },
   {
     "url": "https://github.com/frappe/payments",
-    "branch": "develop",
+    "branch": "version-16",
     "commit": "3cebd9425e414e4c3419a374c616727c5d94b5ea"
   },
   {
