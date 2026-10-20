@@ -132,9 +132,10 @@ RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
   yarn cache clean && \
   cd /home/frappe/frappe-bench && \
   test -n "${FRAPPE_COMMIT}" && \
-  (git -C apps/frappe cat-file -e "${FRAPPE_COMMIT}^{commit}" 2>/dev/null || git -C apps/frappe fetch --depth=1 origin "${FRAPPE_COMMIT}") && \
+  (git -C apps/frappe cat-file -e "${FRAPPE_COMMIT}^{commit}" 2>/dev/null || git -C apps/frappe fetch --depth=1 "${FRAPPE_PATH}" "${FRAPPE_COMMIT}") && \
   git -C apps/frappe checkout --detach --force "${FRAPPE_COMMIT}" && \
   test "$(git -C apps/frappe rev-parse HEAD)" = "${FRAPPE_COMMIT}" && \
+  ./env/bin/pip install --no-cache-dir -e apps/frappe && \
   python3 /tmp/install-upstream-apps.py && \
   /home/frappe/frappe-bench/env/bin/pip install --no-cache-dir \
     redis \

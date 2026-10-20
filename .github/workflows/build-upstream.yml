@@ -12,6 +12,10 @@ concurrency:
   group: build-velveta-frappe-upstream-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
