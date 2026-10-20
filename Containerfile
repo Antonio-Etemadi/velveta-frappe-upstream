@@ -116,7 +116,7 @@ USER frappe
 
 ARG FRAPPE_BRANCH=version-16
 ARG FRAPPE_PATH=https://github.com/frappe/frappe
-ARG FRAPPE_COMMIT=9a8daf343db69a0127f470bad8be0af192cd80c8
+ARG FRAPPE_COMMIT=6a329d068416768ec47ccd3326b9cc95a8d7bf99
 
 RUN --mount=type=secret,id=github_pat,uid=1000,gid=1000,mode=0400 \
   git config --global --add safe.directory "*" && \
